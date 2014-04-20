@@ -1,0 +1,104 @@
+#include<pic.h>
+#include<uart.h>
+#define _XTAL_FREQ 16000000 
+#define BUZZER RC3
+__CONFIG(0X3F7A);
+ unsigned int count;
+ unsigned int dist,dis,i,k;
+ char a[4],ch;
+void ultra();
+void main(void)
+{
+TRISD7=0;
+TRISD6=1;
+TRISC3=0;
+BUZZER=0;
+RD7=0;
+TRISB=0X00;
+PORTB=0XFF;
+uart_init(9600);
+RCIE=1;
+PEIE=1;
+GIE=1;
+while(1)
+{
+ultra();
+if(dis<50)
+{
+uart_write(dis);
+BUZZER=1;
+__delay_ms(4000);
+BUZZER=0;
+}
+if(ch=='1')
+{
+ch=0;
+RB0=0;
+__delay_ms(4000);
+RB0=1;
+}
+if(ch=='2')
+{
+ch=0;
+RB1=0;
+__delay_ms(4000);
+RB1=1;
+}
+if(ch=='3')
+{
+ch=0;
+RB2=0;
+__delay_ms(4000);
+RB2=1;
+}
+if(ch=='4')
+{
+ch=0;
+RB3=0;
+__delay_ms(4000);
+RB3=1;
+}
+}
+}
+
+void ultra()
+{
+count=0;
+RD7=1;
+  __delay_us(10);
+  RD7=0;
+ while(RD6==0);
+
+while(RD6==1)
+ {
+  count=count+1;
+  __delay_us(100);
+
+  }
+ dist=(int)(count*1.7);
+dis=dist;
+/*for(i=0;i<3;i++)
+ {
+	k=dist%10;
+	k=k+0x30;
+	a[2-i]=k;
+	dist=dist/10;
+}
+a[3]=0x00;
+   uart_puts("\rCM=");
+uart_puts(a);*/
+ __delay_ms(100);
+}
+
+void interrupt ISR(void)
+{
+	if(RCIF)  // If UART Rx Interrupt
+	{
+		if(OERR) // If over run error, then reset the receiver
+		{
+			CREN = 0;
+			CREN = 1;
+		}
+		ch=RCREG;
+	}
+}
